@@ -30,6 +30,7 @@ const AssetsSelector = ({
     Styles,
     Navigator,
     CustomNavigator,
+    onChange
 }: AssetSelectorPropTypes): JSX.Element => {
     const getScreen = () => Dimensions.get('screen')
 
@@ -53,6 +54,19 @@ const AssetsSelector = ({
     })
 
     const [assetItems, setItems] = useState<Asset[]>([])
+
+    useEffect(() => {
+        if (typeof onChange === 'function') {
+            onChange(
+                selectedItems.map((id, index) => {
+                    const asset = assetItems.find((item) => item.id === id)
+                    if (!asset)
+                        throw new Error(`Invalid asset at index ${index}`)
+                    return asset
+                })
+            )
+        }
+    }, [selectedItems, assetItems])
 
     const [isLoading, setLoading] = useState(true)
 
@@ -97,9 +111,8 @@ const AssetsSelector = ({
 
     const getMediaLibraryPermission = useCallback(async () => {
         try {
-            const {
-                status: MEDIA_LIBRARY,
-            }: MediaLibrary.PermissionResponse = await MediaLibrary.requestPermissionsAsync()
+            const { status: MEDIA_LIBRARY }: MediaLibrary.PermissionResponse =
+                await MediaLibrary.requestPermissionsAsync()
             if (MEDIA_LIBRARY !== 'granted') {
                 setLoading(false)
                 setError({
